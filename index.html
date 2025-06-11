@@ -1,0 +1,2737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduMetrics Pro - Educational Performance Dashboard</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'primary': ['Outfit', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'ui-monospace', 'monospace'],
+                        'sans': ['Outfit', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        danger: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                        'bounce-subtle': 'bounceSubtle 0.6s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        bounceSubtle: {
+                            '0%, 20%, 50%, 80%, 100%': { transform: 'translateY(0)' },
+                            '40%': { transform: 'translateY(-4px)' },
+                            '60%': { transform: 'translateY(-2px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .dark .glass-effect {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dark .card-hover:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.5);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.7);
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(125, 211, 252, 0.5);
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: rgba(125, 211, 252, 0.7);
+        }
+        
+        /* Notification styles */
+        .notification {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            border: 3px solid rgba(14, 165, 233, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #0ea5e9;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Chart container responsive */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 200px;
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .mobile-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-stack {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            .mobile-full {
+                width: 100% !important;
+            }
+
+            .mobile-text-sm {
+                font-size: 0.875rem !important;
+            }
+
+            .mobile-p-2 {
+                padding: 0.5rem !important;
+            }
+
+            .mobile-hidden {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mobile-xs-text {
+                font-size: 0.75rem !important;
+            }
+
+            .mobile-xs-p {
+                padding: 0.25rem !important;
+            }
+        }
+
+        /* Table responsive improvements */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 0.75rem;
+        }
+
+        .table-responsive table {
+            min-width: 800px;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive table {
+                min-width: 600px;
+            }
+        }
+
+        /* Mobile card layout for table */
+        @media (max-width: 640px) {
+            .mobile-card-view {
+                display: block !important;
+            }
+
+            .mobile-card-view table,
+            .mobile-card-view thead,
+            .mobile-card-view tbody,
+            .mobile-card-view th,
+            .mobile-card-view td,
+            .mobile-card-view tr {
+                display: block;
+            }
+
+            .mobile-card-view thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            .mobile-card-view tr {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+                padding: 1rem;
+            }
+
+            .dark .mobile-card-view tr {
+                background: #1e293b;
+                border-color: #475569;
+            }
+
+            .mobile-card-view td {
+                border: none;
+                position: relative;
+                padding: 0.5rem 0;
+                padding-left: 40%;
+                text-align: left !important;
+            }
+
+            .mobile-card-view td:before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 0;
+                width: 35%;
+                font-weight: 600;
+                color: #64748b;
+            }
+
+            .dark .mobile-card-view td:before {
+                color: #94a3b8;
+            }
+        }
+
+        /* Custom theme toggle icon visibility - Server-safe alternative to Tailwind's hidden class */
+        .icon-hidden {
+            display: none !important;
+        }
+
+        .icon-visible {
+            display: inline !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 min-h-screen transition-all duration-300">
+    
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-lg p-6 flex items-center space-x-3">
+            <div class="loading-spinner"></div>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">Processing...</span>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 glass-effect border-b border-white/20 dark:border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-graduation-cap text-white text-sm sm:text-lg"></i>
+                    </div>
+                    <div class="hidden sm:block">
+                        <h1 class="text-lg sm:text-xl font-bold font-primary text-slate-800 dark:text-white tracking-tight">EduMetrics Pro</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Educational Performance Dashboard</p>
+                    </div>
+                    <div class="block sm:hidden">
+                        <h1 class="text-lg font-bold font-primary text-slate-800 dark:text-white tracking-tight">EduMetrics</h1>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#overview" class="text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-chart-line text-sm"></i>
+                        <span>Overview</span>
+                    </a>
+                    <a href="#analytics" class="text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-chart-bar text-sm"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="#students" class="text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-users text-sm"></i>
+                        <span>Students</span>
+                    </a>
+                </nav>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="p-2 sm:p-3 rounded-lg bg-white/30 dark:bg-black/40 hover:bg-white/50 dark:hover:bg-black/60 transition-all duration-200 backdrop-blur-sm">
+                        <i id="moonIcon" class="fas fa-moon text-slate-700 dark:text-slate-300 text-sm sm:text-lg icon-visible"></i>
+                        <i id="sunIcon" class="fas fa-sun text-yellow-400 text-sm sm:text-lg icon-hidden"></i>
+                    </button>
+
+                    <!-- Export Dropdown -->
+                    <div class="relative">
+                        <button id="exportButton" class="bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-1 sm:space-x-2">
+                            <i class="fas fa-download text-xs sm:text-sm"></i>
+                            <span class="hidden sm:inline">Export</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div id="exportDropdown" class="absolute right-0 mt-2 w-56 sm:w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 hidden z-50">
+                            <div class="py-2">
+                                <!-- PDF Reports -->
+                                <div class="px-3 py-1">
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reports</span>
+                                </div>
+                                <button id="exportPDFReport" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-file-pdf text-red-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">Comprehensive PDF Report</span>
+                                </button>
+                                <button id="exportAnalyticsPDF" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-chart-line text-purple-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">Analytics Summary PDF</span>
+                                </button>
+
+                                <hr class="my-2 border-slate-200 dark:border-slate-600">
+
+                                <!-- Data Exports -->
+                                <div class="px-3 py-1">
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data</span>
+                                </div>
+                                <button id="exportCSVStudents" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-file-csv text-green-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">Student Data CSV</span>
+                                </button>
+                                <button id="exportCSVAnalytics" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-chart-bar text-blue-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">Analytics Data CSV</span>
+                                </button>
+                                <button id="exportExcel" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-file-excel text-green-600 text-sm"></i>
+                                    <span class="text-sm sm:text-base">Excel Workbook</span>
+                                </button>
+                                <button id="exportJSON" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-code text-orange-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">JSON Data</span>
+                                </button>
+
+                                <hr class="my-2 border-slate-200 dark:border-slate-600">
+
+                                <!-- Charts -->
+                                <div class="px-3 py-1">
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Charts</span>
+                                </div>
+                                <button id="exportCharts" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-chart-pie text-indigo-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base">All Charts (ZIP)</span>
+                                </button>
+
+                                <hr class="my-2 border-slate-200 dark:border-slate-600">
+
+                                <!-- Export All -->
+                                <button id="exportAll" class="w-full text-left px-3 sm:px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 sm:space-x-3">
+                                    <i class="fas fa-download text-primary-500 text-sm"></i>
+                                    <span class="text-sm sm:text-base font-semibold">Export Everything</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuButton" class="md:hidden p-2 sm:p-3 rounded-lg bg-white/30 dark:bg-black/40 hover:bg-white/50 dark:hover:bg-black/60 transition-all duration-200 backdrop-blur-sm">
+                        <i class="fas fa-bars text-slate-700 dark:text-slate-300 text-sm sm:text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobileMenu" class="md:hidden bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-white/20 dark:border-slate-700/50 hidden">
+            <div class="px-4 py-3 space-y-2">
+                <a href="#overview" class="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-3">
+                    <i class="fas fa-chart-line text-sm"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#analytics" class="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-3">
+                    <i class="fas fa-chart-bar text-sm"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#students" class="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-3">
+                    <i class="fas fa-users text-sm"></i>
+                    <span>Students</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+        <!-- Filter Controls Section -->
+        <section id="overview" class="mb-6 sm:mb-8">
+            <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 sm:mb-6">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">Performance Overview</h2>
+                        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400">Filter and analyze student performance metrics</p>
+                    </div>
+                    <div class="mt-4 lg:mt-0">
+                        <button id="refreshData" class="w-full lg:w-auto bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 flex items-center justify-center space-x-2">
+                            <i class="fas fa-sync-alt text-sm"></i>
+                            <span>Refresh Data</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <!-- Student Group Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Student Group</label>
+                        <div class="relative">
+                            <select id="studentGroupFilter" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none">
+                                <option value="all">All Students</option>
+                                <option value="freshman">Freshman</option>
+                                <option value="sophomore">Sophomore</option>
+                                <option value="junior">Junior</option>
+                                <option value="senior">Senior</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Area Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject Area</label>
+                        <div class="relative">
+                            <select id="subjectAreaFilter" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none">
+                                <option value="all">All Subjects</option>
+                                <option value="mathematics">Mathematics</option>
+                                <option value="science">Science</option>
+                                <option value="english">English</option>
+                                <option value="history">History</option>
+                                <option value="arts">Arts</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Period Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Time Period</label>
+                        <div class="relative">
+                            <select id="timePeriodFilter" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none">
+                                <option value="current_semester">Current Semester</option>
+                                <option value="academic_year">Academic Year</option>
+                                <option value="last_semester">Last Semester</option>
+                                <option value="all_time">All Time</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Apply Filters Button -->
+                    <div class="sm:flex sm:items-end lg:col-span-1">
+                        <button id="applyFilters" class="w-full bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Cards Section -->
+        <section class="mb-6 sm:mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <!-- Average GPA Card -->
+                <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50 card-hover">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-sm sm:text-lg"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs last period</div>
+                            <div id="gpaChange" class="text-xs text-accent-600 dark:text-accent-400 font-semibold">+0.12 ↗</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Average GPA</h3>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white" id="averageGPA">3.42</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Out of 4.0</div>
+                    </div>
+                </div>
+
+                <!-- Attendance Rate Card -->
+                <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50 card-hover">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-accent-500 to-accent-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-check text-white text-sm sm:text-lg"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs last period</div>
+                            <div id="attendanceChange" class="text-xs text-accent-600 dark:text-accent-400 font-semibold">+2.3% ↗</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Attendance Rate</h3>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white" id="attendanceRate">92.5%</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Average attendance</div>
+                    </div>
+                </div>
+
+                <!-- Assignment Completion Card -->
+                <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50 card-hover">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-warning-500 to-warning-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-tasks text-white text-sm sm:text-lg"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs last period</div>
+                            <div id="assignmentChange" class="text-xs text-danger-600 dark:text-danger-400 font-semibold">-1.2% ↘</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Assignment Completion</h3>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white" id="assignmentCompletion">87.8%</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">On-time submissions</div>
+                    </div>
+                </div>
+
+                <!-- Total Students Card -->
+                <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50 card-hover">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-slate-500 to-slate-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm sm:text-lg"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs last period</div>
+                            <div id="studentChange" class="text-xs text-accent-600 dark:text-accent-400 font-semibold">+15 ↗</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Total Students</h3>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white" id="totalStudents">1,248</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Active enrollment</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Charts Section -->
+        <section id="analytics" class="mb-6 sm:mb-8">
+            <div class="glass-effect rounded-2xl p-4 sm:p-6 border border-white/20 dark:border-slate-700/50">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 sm:mb-6">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">Performance Analytics</h2>
+                        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400">Interactive charts and visualizations</p>
+                    </div>
+                    <div class="mt-4 lg:mt-0 flex space-x-2">
+                        <button id="chartViewToggle" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 sm:px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 flex items-center space-x-2">
+                            <i class="fas fa-expand text-sm"></i>
+                            <span class="hidden sm:inline">Fullscreen</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <!-- Grade Distribution Chart -->
+                    <div class="bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-white/30 dark:border-slate-700/30">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                            <h3 class="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Grade Distribution</h3>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">Chart Type:</label>
+                                <select id="gradeChartType" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="doughnut">Doughnut</option>
+                                    <option value="pie">Pie</option>
+                                    <option value="bar">Bar</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="gradeDistributionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Subject Performance Chart -->
+                    <div class="bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-white/30 dark:border-slate-700/30">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                            <h3 class="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Subject Performance</h3>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">Chart Type:</label>
+                                <select id="subjectChartType" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="bar">Bar</option>
+                                    <option value="line">Line</option>
+                                    <option value="radar">Radar</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="subjectPerformanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Trends Chart -->
+                    <div class="bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-white/30 dark:border-slate-700/30">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                            <h3 class="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Attendance Trends</h3>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">Chart Type:</label>
+                                <select id="attendanceChartType" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="line">Line</option>
+                                    <option value="area">Area</option>
+                                    <option value="bar">Bar</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="attendanceTrendsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Demographic Comparison Chart -->
+                    <div class="bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-white/30 dark:border-slate-700/30">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                            <h3 class="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Demographic Comparison</h3>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">Compare By:</label>
+                                <select id="demographicType" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="grade_level">Grade Level</option>
+                                    <option value="gender">Gender</option>
+                                    <option value="ethnicity">Ethnicity</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="demographicChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Student Data Table Section -->
+        <section id="students" class="mb-6 sm:mb-8">
+            <div class="glass-effect rounded-2xl border border-white/20 dark:border-slate-700/50 overflow-hidden">
+                <!-- Table Header -->
+                <div class="p-4 sm:p-6 border-b border-white/20 dark:border-slate-700/50">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">Student Performance Data</h2>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400">Detailed student information and performance metrics</p>
+                        </div>
+                        <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                            <!-- Search Input -->
+                            <div class="relative">
+                                <input type="text" id="studentSearch" placeholder="Search students..." class="w-full sm:w-64 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 pl-10 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <i class="fas fa-search text-slate-400 text-sm"></i>
+                                </div>
+                            </div>
+                            <!-- Add Student Button -->
+                            <button id="addStudentBtn" class="bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                                <i class="fas fa-plus text-sm"></i>
+                                <span>Add Student</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Controls -->
+                <div class="p-4 bg-white/30 dark:bg-slate-800/30 border-b border-white/20 dark:border-slate-700/50">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm text-slate-600 dark:text-slate-400">Show:</label>
+                                <select id="entriesPerPage" class="text-sm bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-slate-600 dark:text-slate-400">entries</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm text-slate-600 dark:text-slate-400">Sort by:</label>
+                                <select id="sortBy" class="text-sm bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-slate-700 dark:text-slate-300">
+                                    <option value="name">Name</option>
+                                    <option value="gpa">GPA</option>
+                                    <option value="attendance">Attendance</option>
+                                    <option value="assignments">Assignments</option>
+                                    <option value="grade_level">Grade Level</option>
+                                </select>
+                                <button id="sortDirection" class="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                                    <i class="fas fa-sort-alpha-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                            <span id="tableInfo">Showing 1-10 of 1,248 students</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive mobile-card-view">
+                    <table class="w-full">
+                        <thead class="bg-white/50 dark:bg-slate-800/50">
+                            <tr>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="name">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Student Name</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="id">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Student ID</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="gpa">
+                                    <div class="flex items-center space-x-1">
+                                        <span>GPA</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="attendance">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Attendance</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="assignments">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Assignments</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" data-sort="grade_level">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Grade Level</span>
+                                        <i class="fas fa-sort text-xs"></i>
+                                    </div>
+                                </th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody" class="bg-white/30 dark:bg-slate-800/30 divide-y divide-white/20 dark:divide-slate-700/50">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="p-4 bg-white/30 dark:bg-slate-800/30 border-t border-white/20 dark:border-slate-700/50">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                            <span id="paginationInfo">Showing 1 to 10 of 1,248 results</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="prevPage" class="px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div id="pageNumbers" class="flex items-center space-x-1">
+                                <!-- Page numbers will be populated by JavaScript -->
+                            </div>
+                            <button id="nextPage" class="px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 dark:bg-slate-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">EduMetrics Pro</h3>
+                            <p class="text-sm text-slate-400">Educational Performance Dashboard</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 mb-4">
+                        Empowering educational consultants with comprehensive data visualization and analytics tools to track student performance and drive academic success.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" id="twitterLink" class="text-slate-400 hover:text-white transition-colors" title="Follow us on Twitter">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" id="linkedinLink" class="text-slate-400 hover:text-white transition-colors" title="Connect on LinkedIn">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" id="githubLink" class="text-slate-400 hover:text-white transition-colors" title="View on GitHub">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#overview" class="text-slate-300 hover:text-white transition-colors">Overview</a></li>
+                        <li><a href="#analytics" class="text-slate-300 hover:text-white transition-colors">Analytics</a></li>
+                        <li><a href="#students" class="text-slate-300 hover:text-white transition-colors">Students</a></li>
+                        <li><a href="#" id="reportsLink" class="text-slate-300 hover:text-white transition-colors">Reports</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" id="documentationLink" class="text-slate-300 hover:text-white transition-colors">Documentation</a></li>
+                        <li><a href="#" id="helpCenterLink" class="text-slate-300 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" id="contactUsLink" class="text-slate-300 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" id="privacyPolicyLink" class="text-slate-300 hover:text-white transition-colors">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-700 mt-8 pt-8 text-center">
+                <p class="text-slate-400">
+                    EduMetrics Pro
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Student Modal -->
+    <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
+                <div class="flex items-center justify-between">
+                    <h3 id="modalTitle" class="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">Add New Student</h3>
+                    <button id="closeModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1">
+                        <i class="fas fa-times text-lg sm:text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-6">
+                <form id="studentForm" class="space-y-6">
+                    <input type="hidden" id="studentId">
+
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Student Name *</label>
+                            <input type="text" id="studentName" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Student ID *</label>
+                            <input type="text" id="studentIdInput" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">GPA *</label>
+                            <input type="number" id="studentGPA" step="0.01" min="0" max="4" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Attendance % *</label>
+                            <input type="number" id="studentAttendance" min="0" max="100" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Assignments % *</label>
+                            <input type="number" id="studentAssignments" min="0" max="100" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Grade Level *</label>
+                            <select id="studentGradeLevel" required class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <option value="">Select Grade Level</option>
+                                <option value="freshman">Freshman</option>
+                                <option value="sophomore">Sophomore</option>
+                                <option value="junior">Junior</option>
+                                <option value="senior">Senior</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gender</label>
+                            <select id="studentGender" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ethnicity</label>
+                            <select id="studentEthnicity" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <option value="">Select Ethnicity</option>
+                                <option value="caucasian">Caucasian</option>
+                                <option value="african_american">African American</option>
+                                <option value="hispanic">Hispanic</option>
+                                <option value="asian">Asian</option>
+                                <option value="native_american">Native American</option>
+                                <option value="pacific_islander">Pacific Islander</option>
+                                <option value="mixed">Mixed/Multiracial</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Subject Scores -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Subject Scores</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-600 dark:text-slate-400 mb-1">Mathematics</label>
+                                <input type="number" id="mathScore" min="0" max="100" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-600 dark:text-slate-400 mb-1">Science</label>
+                                <input type="number" id="scienceScore" min="0" max="100" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-600 dark:text-slate-400 mb-1">English</label>
+                                <input type="number" id="englishScore" min="0" max="100" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-600 dark:text-slate-400 mb-1">History</label>
+                                <input type="number" id="historyScore" min="0" max="100" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-600 dark:text-slate-400 mb-1">Arts</label>
+                                <input type="number" id="artsScore" min="0" max="100" class="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+                        <button type="button" id="cancelModal" class="w-full sm:w-auto px-6 py-2 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
+                            Save Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Global Variables
+        let studentsData = [];
+        let filteredStudents = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let currentSort = { field: 'name', direction: 'asc' };
+        let charts = {};
+
+        // Sample Data
+        const sampleStudents = [
+            {
+                id: 'STU001',
+                name: 'Emma Johnson',
+                gpa: 3.85,
+                attendance: 95,
+                assignments: 92,
+                grade_level: 'senior',
+                gender: 'female',
+                ethnicity: 'caucasian',
+                subjects: { mathematics: 88, science: 92, english: 90, history: 85, arts: 94 }
+            },
+            {
+                id: 'STU002',
+                name: 'Liam Chen',
+                gpa: 3.42,
+                attendance: 88,
+                assignments: 85,
+                grade_level: 'junior',
+                gender: 'male',
+                ethnicity: 'asian',
+                subjects: { mathematics: 82, science: 85, english: 78, history: 80, arts: 75 }
+            },
+            {
+                id: 'STU003',
+                name: 'Sophia Rodriguez',
+                gpa: 3.91,
+                attendance: 97,
+                assignments: 96,
+                grade_level: 'senior',
+                gender: 'female',
+                ethnicity: 'hispanic',
+                subjects: { mathematics: 95, science: 94, english: 92, history: 89, arts: 98 }
+            },
+            {
+                id: 'STU004',
+                name: 'Noah Williams',
+                gpa: 2.78,
+                attendance: 79,
+                assignments: 72,
+                grade_level: 'freshman',
+                gender: 'male',
+                ethnicity: 'african_american',
+                subjects: { mathematics: 65, science: 70, english: 68, history: 62, arts: 75 }
+            },
+            {
+                id: 'STU005',
+                name: 'Ava Thompson',
+                gpa: 3.67,
+                attendance: 92,
+                assignments: 89,
+                grade_level: 'sophomore',
+                gender: 'female',
+                ethnicity: 'caucasian',
+                subjects: { mathematics: 87, science: 85, english: 91, history: 83, arts: 89 }
+            },
+            {
+                id: 'STU006',
+                name: 'Ethan Davis',
+                gpa: 3.23,
+                attendance: 85,
+                assignments: 81,
+                grade_level: 'junior',
+                gender: 'male',
+                ethnicity: 'caucasian',
+                subjects: { mathematics: 78, science: 82, english: 75, history: 79, arts: 76 }
+            },
+            {
+                id: 'STU007',
+                name: 'Isabella Garcia',
+                gpa: 3.56,
+                attendance: 90,
+                assignments: 87,
+                grade_level: 'sophomore',
+                gender: 'female',
+                ethnicity: 'hispanic',
+                subjects: { mathematics: 84, science: 88, english: 86, history: 81, arts: 91 }
+            },
+            {
+                id: 'STU008',
+                name: 'Mason Brown',
+                gpa: 2.95,
+                attendance: 82,
+                assignments: 78,
+                grade_level: 'freshman',
+                gender: 'male',
+                ethnicity: 'african_american',
+                subjects: { mathematics: 72, science: 75, english: 70, history: 68, arts: 80 }
+            },
+            {
+                id: 'STU009',
+                name: 'Mia Wilson',
+                gpa: 3.78,
+                attendance: 94,
+                assignments: 91,
+                grade_level: 'senior',
+                gender: 'female',
+                ethnicity: 'asian',
+                subjects: { mathematics: 90, science: 89, english: 93, history: 87, arts: 92 }
+            },
+            {
+                id: 'STU010',
+                name: 'Lucas Miller',
+                gpa: 3.34,
+                attendance: 87,
+                assignments: 84,
+                grade_level: 'junior',
+                gender: 'male',
+                ethnicity: 'caucasian',
+                subjects: { mathematics: 80, science: 83, english: 79, history: 77, arts: 85 }
+            }
+        ];
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Load sample data
+            studentsData = [...sampleStudents];
+            filteredStudents = [...studentsData];
+
+            // Initialize theme
+            initializeTheme();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Render initial data
+            updateKPICards();
+            renderCharts();
+            updateSortUI(); // Initialize sort UI
+            renderStudentTable();
+
+            // Show success notification
+            showNotification('Dashboard loaded successfully!', 'success');
+        }
+
+        // Theme Management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                updateThemeIcons(true);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcons(isDark);
+
+            // Re-render charts with new theme
+            setTimeout(() => {
+                renderCharts();
+            }, 100);
+        }
+
+        function updateThemeIcons(isDark) {
+            const moonIcon = document.getElementById('moonIcon');
+            const sunIcon = document.getElementById('sunIcon');
+
+            if (isDark) {
+                moonIcon.classList.remove('icon-visible');
+                moonIcon.classList.add('icon-hidden');
+                sunIcon.classList.remove('icon-hidden');
+                sunIcon.classList.add('icon-visible');
+            } else {
+                moonIcon.classList.remove('icon-hidden');
+                moonIcon.classList.add('icon-visible');
+                sunIcon.classList.remove('icon-visible');
+                sunIcon.classList.add('icon-hidden');
+            }
+        }
+
+        // Event Listeners Setup
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Mobile menu toggle
+            document.getElementById('mobileMenuButton').addEventListener('click', toggleMobileMenu);
+
+            // Export dropdown
+            document.getElementById('exportButton').addEventListener('click', toggleExportDropdown);
+
+            // Filter controls
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('refreshData').addEventListener('click', refreshData);
+
+            // Student management
+            document.getElementById('addStudentBtn').addEventListener('click', () => openStudentModal());
+            document.getElementById('closeModal').addEventListener('click', closeStudentModal);
+            document.getElementById('cancelModal').addEventListener('click', closeStudentModal);
+            document.getElementById('studentForm').addEventListener('submit', saveStudent);
+
+            // Search functionality
+            document.getElementById('studentSearch').addEventListener('input', handleSearch);
+
+            // Table controls
+            document.getElementById('entriesPerPage').addEventListener('change', handleEntriesPerPageChange);
+            document.getElementById('sortBy').addEventListener('change', handleSortChange);
+            document.getElementById('sortDirection').addEventListener('click', toggleSortDirection);
+
+            // Pagination
+            document.getElementById('prevPage').addEventListener('click', () => changePage(currentPage - 1));
+            document.getElementById('nextPage').addEventListener('click', () => changePage(currentPage + 1));
+
+            // Chart type changes
+            document.getElementById('gradeChartType').addEventListener('change', (e) => renderGradeDistributionChart(e.target.value));
+            document.getElementById('subjectChartType').addEventListener('change', (e) => renderSubjectPerformanceChart(e.target.value));
+            document.getElementById('attendanceChartType').addEventListener('change', (e) => renderAttendanceTrendsChart(e.target.value));
+            document.getElementById('demographicType').addEventListener('change', (e) => renderDemographicChart(e.target.value));
+
+            // Export functions
+            document.getElementById('exportPDFReport').addEventListener('click', exportPDFReport);
+            document.getElementById('exportAnalyticsPDF').addEventListener('click', exportAnalyticsPDF);
+            document.getElementById('exportCSVStudents').addEventListener('click', exportCSVStudents);
+            document.getElementById('exportCSVAnalytics').addEventListener('click', exportCSVAnalytics);
+            document.getElementById('exportExcel').addEventListener('click', exportExcel);
+            document.getElementById('exportJSON').addEventListener('click', exportJSON);
+            document.getElementById('exportCharts').addEventListener('click', exportCharts);
+            document.getElementById('exportAll').addEventListener('click', exportAll);
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', handleOutsideClick);
+
+            // Table header sorting
+            document.querySelectorAll('th[data-sort]').forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortField = this.getAttribute('data-sort');
+                    handleTableHeaderSort(sortField);
+                });
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Footer link functionality
+            document.getElementById('twitterLink').addEventListener('click', handleTwitterLink);
+            document.getElementById('linkedinLink').addEventListener('click', handleLinkedInLink);
+            document.getElementById('githubLink').addEventListener('click', handleGitHubLink);
+            document.getElementById('reportsLink').addEventListener('click', handleReportsLink);
+            document.getElementById('documentationLink').addEventListener('click', handleDocumentationLink);
+            document.getElementById('helpCenterLink').addEventListener('click', handleHelpCenterLink);
+            document.getElementById('contactUsLink').addEventListener('click', handleContactUsLink);
+            document.getElementById('privacyPolicyLink').addEventListener('click', handlePrivacyPolicyLink);
+        }
+
+        // UI Helper Functions
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        function toggleExportDropdown() {
+            const dropdown = document.getElementById('exportDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function handleOutsideClick(event) {
+            const exportButton = document.getElementById('exportButton');
+            const exportDropdown = document.getElementById('exportDropdown');
+
+            if (!exportButton.contains(event.target) && !exportDropdown.contains(event.target)) {
+                exportDropdown.classList.add('hidden');
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+
+            const bgColor = {
+                success: 'bg-accent-500',
+                error: 'bg-danger-500',
+                warning: 'bg-warning-500',
+                info: 'bg-primary-500'
+            }[type];
+
+            notification.className = `notification ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            container.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // KPI Cards Update
+        function updateKPICards() {
+            const data = filteredStudents;
+
+            // Calculate averages
+            const avgGPA = data.length > 0 ? (data.reduce((sum, s) => sum + s.gpa, 0) / data.length).toFixed(2) : '0.00';
+            const avgAttendance = data.length > 0 ? (data.reduce((sum, s) => sum + s.attendance, 0) / data.length).toFixed(1) : '0.0';
+            const avgAssignments = data.length > 0 ? (data.reduce((sum, s) => sum + s.assignments, 0) / data.length).toFixed(1) : '0.0';
+            const totalStudents = data.length;
+
+            // Update DOM
+            document.getElementById('averageGPA').textContent = avgGPA;
+            document.getElementById('attendanceRate').textContent = avgAttendance + '%';
+            document.getElementById('assignmentCompletion').textContent = avgAssignments + '%';
+            document.getElementById('totalStudents').textContent = totalStudents.toLocaleString();
+        }
+
+        // Filter Functions
+        function applyFilters() {
+            showLoadingOverlay(true);
+
+            const studentGroup = document.getElementById('studentGroupFilter').value;
+            const subjectArea = document.getElementById('subjectAreaFilter').value;
+            const timePeriod = document.getElementById('timePeriodFilter').value;
+
+            filteredStudents = studentsData.filter(student => {
+                let matches = true;
+
+                if (studentGroup !== 'all') {
+                    matches = matches && student.grade_level === studentGroup;
+                }
+
+                // Subject area filtering would require more complex logic
+                // For now, we'll just filter by grade level
+
+                return matches;
+            });
+
+            currentPage = 1;
+            updateKPICards();
+            renderCharts();
+            renderStudentTable();
+
+            showLoadingOverlay(false);
+            showNotification('Filters applied successfully!', 'success');
+        }
+
+        function refreshData() {
+            showLoadingOverlay(true);
+
+            // Reset filters
+            document.getElementById('studentGroupFilter').value = 'all';
+            document.getElementById('subjectAreaFilter').value = 'all';
+            document.getElementById('timePeriodFilter').value = 'current_semester';
+
+            // Reset data
+            filteredStudents = [...studentsData];
+            currentPage = 1;
+
+            // Update UI
+            updateKPICards();
+            renderCharts();
+            renderStudentTable();
+
+            showLoadingOverlay(false);
+            showNotification('Data refreshed successfully!', 'success');
+        }
+
+        function showLoadingOverlay(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Search Functionality
+        function handleSearch(event) {
+            const searchTerm = event.target.value.toLowerCase();
+
+            if (searchTerm === '') {
+                filteredStudents = [...studentsData];
+            } else {
+                filteredStudents = studentsData.filter(student =>
+                    student.name.toLowerCase().includes(searchTerm) ||
+                    student.id.toLowerCase().includes(searchTerm) ||
+                    student.grade_level.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            currentPage = 1;
+            updateKPICards();
+            renderStudentTable();
+        }
+
+        // Table Management
+        function handleEntriesPerPageChange(event) {
+            itemsPerPage = parseInt(event.target.value);
+            currentPage = 1;
+            renderStudentTable();
+        }
+
+        function handleSortChange(event) {
+            currentSort.field = event.target.value;
+            updateSortUI();
+            sortStudents();
+            renderStudentTable();
+        }
+
+        function handleTableHeaderSort(field) {
+            // If clicking the same field, toggle direction
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                // If clicking a different field, set to ascending
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+
+            // Update the dropdown to match
+            document.getElementById('sortBy').value = field;
+            updateSortUI();
+            sortStudents();
+            renderStudentTable();
+        }
+
+        function toggleSortDirection() {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            updateSortUI();
+            sortStudents();
+            renderStudentTable();
+        }
+
+        function updateSortUI() {
+            // Update sort direction button
+            const icon = document.querySelector('#sortDirection i');
+            icon.className = currentSort.direction === 'asc' ? 'fas fa-sort-alpha-down' : 'fas fa-sort-alpha-up';
+
+            // Update table header icons
+            document.querySelectorAll('th[data-sort] i').forEach(icon => {
+                icon.className = 'fas fa-sort text-xs';
+            });
+
+            // Update the active column icon
+            const activeHeader = document.querySelector(`th[data-sort="${currentSort.field}"] i`);
+            if (activeHeader) {
+                activeHeader.className = currentSort.direction === 'asc' ? 'fas fa-sort-up text-xs' : 'fas fa-sort-down text-xs';
+            }
+        }
+
+        function sortStudents() {
+            filteredStudents.sort((a, b) => {
+                let aVal = a[currentSort.field];
+                let bVal = b[currentSort.field];
+
+                // Handle different data types properly
+                if (currentSort.field === 'gpa' || currentSort.field === 'attendance' || currentSort.field === 'assignments') {
+                    // Numeric comparison
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                } else if (currentSort.field === 'name' || currentSort.field === 'grade_level' || currentSort.field === 'gender' || currentSort.field === 'ethnicity') {
+                    // String comparison (case-insensitive)
+                    aVal = (aVal || '').toString().toLowerCase();
+                    bVal = (bVal || '').toString().toLowerCase();
+                } else if (currentSort.field === 'id') {
+                    // Student ID comparison (alphanumeric)
+                    aVal = (aVal || '').toString();
+                    bVal = (bVal || '').toString();
+                }
+
+                // Perform comparison
+                if (currentSort.direction === 'asc') {
+                    if (aVal < bVal) return -1;
+                    if (aVal > bVal) return 1;
+                    return 0;
+                } else {
+                    if (aVal > bVal) return -1;
+                    if (aVal < bVal) return 1;
+                    return 0;
+                }
+            });
+        }
+
+        // Student Table Rendering
+        function renderStudentTable() {
+            const tbody = document.getElementById('studentTableBody');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredStudents.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+
+            pageData.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap" data-label="Student">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                ${student.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div class="ml-3 sm:ml-4">
+                                <div class="text-sm font-medium text-slate-900 dark:text-white">${student.name}</div>
+                                <div class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">${student.grade_level.charAt(0).toUpperCase() + student.grade_level.slice(1)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white font-mono" data-label="Student ID">${student.id}</td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap" data-label="GPA">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getGPABadgeColor(student.gpa)}">
+                            ${student.gpa.toFixed(2)}
+                        </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap" data-label="Attendance">
+                        <div class="flex items-center">
+                            <div class="w-12 sm:w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-2 mr-2">
+                                <div class="bg-accent-500 h-2 rounded-full" style="width: ${student.attendance}%"></div>
+                            </div>
+                            <span class="text-sm text-slate-900 dark:text-white">${student.attendance}%</span>
+                        </div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap" data-label="Assignments">
+                        <div class="flex items-center">
+                            <div class="w-12 sm:w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-2 mr-2">
+                                <div class="bg-warning-500 h-2 rounded-full" style="width: ${student.assignments}%"></div>
+                            </div>
+                            <span class="text-sm text-slate-900 dark:text-white">${student.assignments}%</span>
+                        </div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap" data-label="Grade Level">
+                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getGradeLevelBadgeColor(student.grade_level)}">
+                            ${student.grade_level.charAt(0).toUpperCase() + student.grade_level.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium" data-label="Actions">
+                        <div class="flex space-x-2">
+                            <button onclick="viewStudent('${student.id}')" class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 transition-colors p-1" title="View Details">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+                            <button onclick="editStudent('${student.id}')" class="text-warning-600 hover:text-warning-900 dark:text-warning-400 dark:hover:text-warning-300 transition-colors p-1" title="Edit Student">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button onclick="deleteStudent('${student.id}')" class="text-danger-600 hover:text-danger-900 dark:text-danger-400 dark:hover:text-danger-300 transition-colors p-1" title="Delete Student">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            updatePagination();
+            updateTableInfo();
+        }
+
+        function getGPABadgeColor(gpa) {
+            if (gpa >= 3.7) return 'bg-accent-100 text-accent-800 dark:bg-accent-900 dark:text-accent-200';
+            if (gpa >= 3.0) return 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200';
+            if (gpa >= 2.5) return 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200';
+            return 'bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200';
+        }
+
+        function getGradeLevelBadgeColor(level) {
+            const colors = {
+                freshman: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                sophomore: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                junior: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                senior: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+            };
+            return colors[level] || 'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200';
+        }
+
+        // Pagination Functions
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+            const pageNumbers = document.getElementById('pageNumbers');
+            const prevButton = document.getElementById('prevPage');
+            const nextButton = document.getElementById('nextPage');
+
+            // Update button states
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+
+            // Generate page numbers
+            pageNumbers.innerHTML = '';
+
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = `px-3 py-2 text-sm border rounded-lg transition-colors ${
+                    i === currentPage
+                        ? 'bg-primary-500 text-white border-primary-500'
+                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
+                }`;
+                pageButton.onclick = () => changePage(i);
+                pageNumbers.appendChild(pageButton);
+            }
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderStudentTable();
+            }
+        }
+
+        function updateTableInfo() {
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, filteredStudents.length);
+            const total = filteredStudents.length;
+
+            document.getElementById('tableInfo').textContent = `Showing ${startIndex}-${endIndex} of ${total} students`;
+            document.getElementById('paginationInfo').textContent = `Showing ${startIndex} to ${endIndex} of ${total} results`;
+        }
+
+        // Student Management Functions
+        function viewStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student) {
+                showNotification(`Viewing details for ${student.name}`, 'info');
+                // In a real application, this would open a detailed view
+            }
+        }
+
+        function editStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student) {
+                openStudentModal(student);
+            }
+        }
+
+        function deleteStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student && confirm(`Are you sure you want to delete ${student.name}?`)) {
+                studentsData = studentsData.filter(s => s.id !== studentId);
+                filteredStudents = filteredStudents.filter(s => s.id !== studentId);
+
+                // Adjust current page if necessary
+                const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                }
+
+                updateKPICards();
+                renderCharts();
+                renderStudentTable();
+                showNotification(`${student.name} has been deleted successfully.`, 'success');
+            }
+        }
+
+        function openStudentModal(student = null) {
+            const modal = document.getElementById('studentModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('studentForm');
+
+            if (student) {
+                title.textContent = 'Edit Student';
+                populateStudentForm(student);
+            } else {
+                title.textContent = 'Add New Student';
+                form.reset();
+                document.getElementById('studentId').value = '';
+            }
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeStudentModal() {
+            const modal = document.getElementById('studentModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function populateStudentForm(student) {
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('studentIdInput').value = student.id;
+            document.getElementById('studentGPA').value = student.gpa;
+            document.getElementById('studentAttendance').value = student.attendance;
+            document.getElementById('studentAssignments').value = student.assignments;
+            document.getElementById('studentGradeLevel').value = student.grade_level;
+            document.getElementById('studentGender').value = student.gender || '';
+            document.getElementById('studentEthnicity').value = student.ethnicity || '';
+
+            // Populate subject scores
+            if (student.subjects) {
+                document.getElementById('mathScore').value = student.subjects.mathematics || '';
+                document.getElementById('scienceScore').value = student.subjects.science || '';
+                document.getElementById('englishScore').value = student.subjects.english || '';
+                document.getElementById('historyScore').value = student.subjects.history || '';
+                document.getElementById('artsScore').value = student.subjects.arts || '';
+            }
+        }
+
+        function saveStudent(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const studentId = document.getElementById('studentId').value;
+            const isEdit = studentId !== '';
+
+            const studentData = {
+                id: document.getElementById('studentIdInput').value,
+                name: document.getElementById('studentName').value,
+                gpa: parseFloat(document.getElementById('studentGPA').value),
+                attendance: parseInt(document.getElementById('studentAttendance').value),
+                assignments: parseInt(document.getElementById('studentAssignments').value),
+                grade_level: document.getElementById('studentGradeLevel').value,
+                gender: document.getElementById('studentGender').value,
+                ethnicity: document.getElementById('studentEthnicity').value,
+                subjects: {
+                    mathematics: parseInt(document.getElementById('mathScore').value) || 0,
+                    science: parseInt(document.getElementById('scienceScore').value) || 0,
+                    english: parseInt(document.getElementById('englishScore').value) || 0,
+                    history: parseInt(document.getElementById('historyScore').value) || 0,
+                    arts: parseInt(document.getElementById('artsScore').value) || 0
+                }
+            };
+
+            // Validation
+            if (!studentData.name || !studentData.id || studentData.gpa < 0 || studentData.gpa > 4) {
+                showNotification('Please fill in all required fields correctly.', 'error');
+                return;
+            }
+
+            // Check for duplicate ID (only for new students or if ID changed)
+            const existingStudent = studentsData.find(s => s.id === studentData.id);
+            if (existingStudent && (!isEdit || existingStudent.id !== studentId)) {
+                showNotification('Student ID already exists. Please use a different ID.', 'error');
+                return;
+            }
+
+            if (isEdit) {
+                // Update existing student
+                const index = studentsData.findIndex(s => s.id === studentId);
+                if (index !== -1) {
+                    studentsData[index] = studentData;
+
+                    // Update filtered data if the student is in current filter
+                    const filteredIndex = filteredStudents.findIndex(s => s.id === studentId);
+                    if (filteredIndex !== -1) {
+                        filteredStudents[filteredIndex] = studentData;
+                    }
+                }
+                showNotification(`${studentData.name} updated successfully!`, 'success');
+            } else {
+                // Add new student
+                studentsData.push(studentData);
+
+                // Add to filtered data if it matches current filters
+                // For simplicity, we'll add it and re-apply filters
+                applyFilters();
+                showNotification(`${studentData.name} added successfully!`, 'success');
+            }
+
+            updateKPICards();
+            renderCharts();
+            renderStudentTable();
+            closeStudentModal();
+        }
+
+        // Chart Rendering Functions
+        function renderCharts() {
+            renderGradeDistributionChart();
+            renderSubjectPerformanceChart();
+            renderAttendanceTrendsChart();
+            renderDemographicChart();
+        }
+
+        function renderGradeDistributionChart(type = 'doughnut') {
+            const ctx = document.getElementById('gradeDistributionChart').getContext('2d');
+
+            if (charts.gradeDistribution) {
+                charts.gradeDistribution.destroy();
+            }
+
+            // Calculate grade distribution
+            const gradeCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+            filteredStudents.forEach(student => {
+                if (student.gpa >= 3.7) gradeCounts['A']++;
+                else if (student.gpa >= 3.0) gradeCounts['B']++;
+                else if (student.gpa >= 2.3) gradeCounts['C']++;
+                else if (student.gpa >= 1.7) gradeCounts['D']++;
+                else gradeCounts['F']++;
+            });
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e2e8f0' : '#475569';
+
+            charts.gradeDistribution = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: ['A (3.7-4.0)', 'B (3.0-3.6)', 'C (2.3-2.9)', 'D (1.7-2.2)', 'F (0.0-1.6)'],
+                    datasets: [{
+                        data: [gradeCounts.A, gradeCounts.B, gradeCounts.C, gradeCounts.D, gradeCounts.F],
+                        backgroundColor: [
+                            '#22c55e',
+                            '#0ea5e9',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#6b7280'
+                        ],
+                        borderWidth: 2,
+                        borderColor: isDark ? '#1e293b' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: isDark ? '#475569' : '#e2e8f0',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSubjectPerformanceChart(type = 'bar') {
+            const ctx = document.getElementById('subjectPerformanceChart').getContext('2d');
+
+            if (charts.subjectPerformance) {
+                charts.subjectPerformance.destroy();
+            }
+
+            // Calculate average scores by subject
+            const subjects = ['mathematics', 'science', 'english', 'history', 'arts'];
+            const averages = subjects.map(subject => {
+                const scores = filteredStudents.map(s => s.subjects[subject]).filter(score => score > 0);
+                return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+            });
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e2e8f0' : '#475569';
+
+            // Configure chart based on type
+            const chartConfig = {
+                type: type,
+                data: {
+                    labels: ['Mathematics', 'Science', 'English', 'History', 'Arts'],
+                    datasets: [{
+                        label: 'Average Score',
+                        data: averages,
+                        backgroundColor: type === 'line' ? 'transparent' : type === 'radar' ? 'rgba(14, 165, 233, 0.2)' : [
+                            '#0ea5e9',
+                            '#22c55e',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderColor: type === 'line' || type === 'radar' ? '#0ea5e9' : undefined,
+                        borderWidth: type === 'line' || type === 'radar' ? 3 : 1,
+                        tension: type === 'line' ? 0.4 : undefined,
+                        fill: type === 'radar'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: type === 'line' || type === 'radar',
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: isDark ? '#475569' : '#e2e8f0',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            };
+
+            // Add scales only for non-radar charts
+            if (type !== 'radar') {
+                chartConfig.options.scales = {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: textColor },
+                        grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                    },
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                    }
+                };
+            } else {
+                // Radar chart specific configuration
+                chartConfig.options.scales = {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: textColor },
+                        grid: { color: isDark ? '#374151' : '#e5e7eb' },
+                        pointLabels: { color: textColor }
+                    }
+                };
+            }
+
+            charts.subjectPerformance = new Chart(ctx, chartConfig);
+        }
+
+        function renderAttendanceTrendsChart(type = 'line') {
+            const ctx = document.getElementById('attendanceTrendsChart').getContext('2d');
+
+            if (charts.attendanceTrends) {
+                charts.attendanceTrends.destroy();
+            }
+
+            // Sample attendance trend data
+            const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
+            const trendData = [89, 91, 88, 85, 92, 94, 91, 93, 95];
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e2e8f0' : '#475569';
+
+            // Handle area chart as line chart with fill
+            const chartType = type === 'area' ? 'line' : type;
+            const shouldFill = type === 'area';
+
+            charts.attendanceTrends = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Attendance Rate (%)',
+                        data: trendData,
+                        backgroundColor: shouldFill ? 'rgba(34, 197, 94, 0.2)' : type === 'line' ? 'transparent' : '#22c55e',
+                        borderColor: '#22c55e',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: shouldFill
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: isDark ? '#475569' : '#e2e8f0',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: textColor },
+                            grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDemographicChart(compareBy = 'grade_level') {
+            const ctx = document.getElementById('demographicChart').getContext('2d');
+
+            if (charts.demographic) {
+                charts.demographic.destroy();
+            }
+
+            let labels = [];
+            let data = [];
+
+            if (compareBy === 'grade_level') {
+                const levels = ['freshman', 'sophomore', 'junior', 'senior'];
+                labels = levels.map(l => l.charAt(0).toUpperCase() + l.slice(1));
+                data = levels.map(level => {
+                    const students = filteredStudents.filter(s => s.grade_level === level);
+                    return students.length > 0 ? students.reduce((sum, s) => sum + s.gpa, 0) / students.length : 0;
+                });
+            } else if (compareBy === 'gender') {
+                const genders = ['male', 'female', 'other'];
+                labels = genders.map(g => g.charAt(0).toUpperCase() + g.slice(1));
+                data = genders.map(gender => {
+                    const students = filteredStudents.filter(s => s.gender === gender);
+                    return students.length > 0 ? students.reduce((sum, s) => sum + s.gpa, 0) / students.length : 0;
+                });
+            } else if (compareBy === 'ethnicity') {
+                const ethnicities = ['caucasian', 'african_american', 'hispanic', 'asian', 'native_american', 'pacific_islander', 'mixed', 'other'];
+                labels = ethnicities.map(e => {
+                    if (e === 'african_american') return 'African American';
+                    if (e === 'native_american') return 'Native American';
+                    if (e === 'pacific_islander') return 'Pacific Islander';
+                    if (e === 'mixed') return 'Mixed/Multiracial';
+                    return e.charAt(0).toUpperCase() + e.slice(1);
+                });
+                data = ethnicities.map(ethnicity => {
+                    const students = filteredStudents.filter(s => s.ethnicity === ethnicity);
+                    return students.length > 0 ? students.reduce((sum, s) => sum + s.gpa, 0) / students.length : 0;
+                });
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e2e8f0' : '#475569';
+
+            charts.demographic = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Average GPA',
+                        data: data,
+                        backgroundColor: [
+                            '#0ea5e9',
+                            '#22c55e',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6',
+                            '#06b6d4',
+                            '#f97316',
+                            '#84cc16'
+                        ],
+                        borderWidth: 1,
+                        borderColor: isDark ? '#1e293b' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: isDark ? '#475569' : '#e2e8f0',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 4,
+                            ticks: { color: textColor },
+                            grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: isDark ? '#374151' : '#e5e7eb' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Export Functions
+        function exportPDFReport() {
+            showLoadingOverlay(true);
+            showNotification('Generating comprehensive PDF report...', 'info');
+
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yPosition = 30;
+
+                // Helper function to add page if needed
+                function checkPageBreak(doc, yPos, margin = 20) {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        return 30;
+                    }
+                    return yPos;
+                }
+
+                // Title and Header
+                doc.setFontSize(24);
+                doc.setFont(undefined, 'bold');
+                doc.text('EduMetrics Pro', 20, yPosition);
+                yPosition += 10;
+
+                doc.setFontSize(18);
+                doc.text('Comprehensive Educational Performance Report', 20, yPosition);
+                yPosition += 15;
+
+                // Date and filters info
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 20, yPosition);
+                yPosition += 8;
+                doc.text(`Total Students Analyzed: ${filteredStudents.length}`, 20, yPosition);
+                yPosition += 15;
+
+                // Executive Summary
+                yPosition = checkPageBreak(doc, yPosition);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Executive Summary', 20, yPosition);
+                yPosition += 10;
+
+                const avgGPA = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.gpa, 0) / filteredStudents.length).toFixed(2) : '0.00';
+                const avgAttendance = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.attendance, 0) / filteredStudents.length).toFixed(1) : '0.0';
+                const avgAssignments = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.assignments, 0) / filteredStudents.length).toFixed(1) : '0.0';
+
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                doc.text(`• Overall Average GPA: ${avgGPA} / 4.0`, 25, yPosition);
+                yPosition += 8;
+                doc.text(`• Average Attendance Rate: ${avgAttendance}%`, 25, yPosition);
+                yPosition += 8;
+                doc.text(`• Average Assignment Completion: ${avgAssignments}%`, 25, yPosition);
+                yPosition += 15;
+
+                // Grade Distribution Analysis
+                yPosition = checkPageBreak(doc, yPosition);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Grade Distribution Analysis', 20, yPosition);
+                yPosition += 10;
+
+                const gradeCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+                filteredStudents.forEach(student => {
+                    if (student.gpa >= 3.7) gradeCounts['A']++;
+                    else if (student.gpa >= 3.0) gradeCounts['B']++;
+                    else if (student.gpa >= 2.3) gradeCounts['C']++;
+                    else if (student.gpa >= 1.7) gradeCounts['D']++;
+                    else gradeCounts['F']++;
+                });
+
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                Object.entries(gradeCounts).forEach(([grade, count]) => {
+                    const percentage = filteredStudents.length > 0 ? ((count / filteredStudents.length) * 100).toFixed(1) : '0.0';
+                    doc.text(`• Grade ${grade}: ${count} students (${percentage}%)`, 25, yPosition);
+                    yPosition += 8;
+                });
+                yPosition += 10;
+
+                // Subject Performance Analysis
+                yPosition = checkPageBreak(doc, yPosition);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Subject Performance Analysis', 20, yPosition);
+                yPosition += 10;
+
+                const subjects = ['mathematics', 'science', 'english', 'history', 'arts'];
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                subjects.forEach(subject => {
+                    const scores = filteredStudents.map(s => s.subjects[subject]).filter(score => score > 0);
+                    const avg = scores.length > 0 ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1) : '0.0';
+                    doc.text(`• ${subject.charAt(0).toUpperCase() + subject.slice(1)}: ${avg}% average`, 25, yPosition);
+                    yPosition += 8;
+                });
+                yPosition += 10;
+
+                // Demographic Analysis
+                yPosition = checkPageBreak(doc, yPosition);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Demographic Analysis', 20, yPosition);
+                yPosition += 10;
+
+                // Gender breakdown
+                const genderCounts = { male: 0, female: 0, other: 0 };
+                filteredStudents.forEach(s => genderCounts[s.gender] = (genderCounts[s.gender] || 0) + 1);
+
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('Gender Distribution:', 25, yPosition);
+                yPosition += 8;
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                Object.entries(genderCounts).forEach(([gender, count]) => {
+                    if (count > 0) {
+                        const percentage = ((count / filteredStudents.length) * 100).toFixed(1);
+                        doc.text(`• ${gender.charAt(0).toUpperCase() + gender.slice(1)}: ${count} students (${percentage}%)`, 30, yPosition);
+                        yPosition += 6;
+                    }
+                });
+                yPosition += 8;
+
+                // Ethnicity breakdown
+                const ethnicityCounts = {};
+                filteredStudents.forEach(s => {
+                    ethnicityCounts[s.ethnicity] = (ethnicityCounts[s.ethnicity] || 0) + 1;
+                });
+
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('Ethnicity Distribution:', 25, yPosition);
+                yPosition += 8;
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                Object.entries(ethnicityCounts).forEach(([ethnicity, count]) => {
+                    if (count > 0) {
+                        const percentage = ((count / filteredStudents.length) * 100).toFixed(1);
+                        const displayName = ethnicity === 'african_american' ? 'African American' :
+                                          ethnicity.charAt(0).toUpperCase() + ethnicity.slice(1);
+                        doc.text(`• ${displayName}: ${count} students (${percentage}%)`, 30, yPosition);
+                        yPosition += 6;
+                    }
+                });
+
+                // Save the PDF
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                doc.save(`educational-performance-report-${timestamp}.pdf`);
+
+                showLoadingOverlay(false);
+                showNotification('Comprehensive PDF report exported successfully!', 'success');
+            }, 2000);
+        }
+
+        function exportAnalyticsPDF() {
+            showLoadingOverlay(true);
+            showNotification('Generating analytics summary PDF...', 'info');
+
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yPosition = 30;
+
+                // Title
+                doc.setFontSize(20);
+                doc.setFont(undefined, 'bold');
+                doc.text('Analytics Summary Report', 20, yPosition);
+                yPosition += 15;
+
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPosition);
+                yPosition += 20;
+
+                // Key Metrics
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Key Performance Indicators', 20, yPosition);
+                yPosition += 10;
+
+                const avgGPA = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.gpa, 0) / filteredStudents.length).toFixed(2) : '0.00';
+                const avgAttendance = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.attendance, 0) / filteredStudents.length).toFixed(1) : '0.0';
+                const avgAssignments = filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.assignments, 0) / filteredStudents.length).toFixed(1) : '0.0';
+
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Average GPA: ${avgGPA}`, 25, yPosition);
+                yPosition += 8;
+                doc.text(`Average Attendance: ${avgAttendance}%`, 25, yPosition);
+                yPosition += 8;
+                doc.text(`Average Assignment Completion: ${avgAssignments}%`, 25, yPosition);
+                yPosition += 8;
+                doc.text(`Total Students: ${filteredStudents.length}`, 25, yPosition);
+                yPosition += 20;
+
+                // Top Performers
+                const topPerformers = [...filteredStudents].sort((a, b) => b.gpa - a.gpa).slice(0, 5);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Top 5 Performers (by GPA)', 20, yPosition);
+                yPosition += 10;
+
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                topPerformers.forEach((student, index) => {
+                    doc.text(`${index + 1}. ${student.name} - GPA: ${student.gpa.toFixed(2)}`, 25, yPosition);
+                    yPosition += 6;
+                });
+
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                doc.save(`analytics-summary-${timestamp}.pdf`);
+
+                showLoadingOverlay(false);
+                showNotification('Analytics PDF exported successfully!', 'success');
+            }, 1500);
+        }
+
+        function exportCSVStudents() {
+            showLoadingOverlay(true);
+            showNotification('Generating student data CSV...', 'info');
+
+            setTimeout(() => {
+                const headers = ['Student ID', 'Name', 'GPA', 'Attendance %', 'Assignments %', 'Grade Level', 'Gender', 'Ethnicity', 'Math', 'Science', 'English', 'History', 'Arts'];
+                const csvData = [headers];
+
+                filteredStudents.forEach(student => {
+                    csvData.push([
+                        student.id,
+                        student.name,
+                        student.gpa,
+                        student.attendance,
+                        student.assignments,
+                        student.grade_level,
+                        student.gender || '',
+                        student.ethnicity || '',
+                        student.subjects.mathematics || '',
+                        student.subjects.science || '',
+                        student.subjects.english || '',
+                        student.subjects.history || '',
+                        student.subjects.arts || ''
+                    ]);
+                });
+
+                const csvContent = csvData.map(row => row.join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                a.download = `student-data-${timestamp}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                showLoadingOverlay(false);
+                showNotification('Student data CSV exported successfully!', 'success');
+            }, 1000);
+        }
+
+        function exportCSVAnalytics() {
+            showLoadingOverlay(true);
+            showNotification('Generating analytics data CSV...', 'info');
+
+            setTimeout(() => {
+                // Analytics summary data
+                const analyticsData = [];
+
+                // Overall statistics
+                analyticsData.push(['Metric', 'Value']);
+                analyticsData.push(['Total Students', filteredStudents.length]);
+                analyticsData.push(['Average GPA', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.gpa, 0) / filteredStudents.length).toFixed(2) : '0.00']);
+                analyticsData.push(['Average Attendance', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.attendance, 0) / filteredStudents.length).toFixed(1) + '%' : '0.0%']);
+                analyticsData.push(['Average Assignment Completion', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.assignments, 0) / filteredStudents.length).toFixed(1) + '%' : '0.0%']);
+                analyticsData.push(['']);
+
+                // Grade distribution
+                const gradeCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+                filteredStudents.forEach(student => {
+                    if (student.gpa >= 3.7) gradeCounts['A']++;
+                    else if (student.gpa >= 3.0) gradeCounts['B']++;
+                    else if (student.gpa >= 2.3) gradeCounts['C']++;
+                    else if (student.gpa >= 1.7) gradeCounts['D']++;
+                    else gradeCounts['F']++;
+                });
+
+                analyticsData.push(['Grade Distribution', '']);
+                Object.entries(gradeCounts).forEach(([grade, count]) => {
+                    const percentage = filteredStudents.length > 0 ? ((count / filteredStudents.length) * 100).toFixed(1) : '0.0';
+                    analyticsData.push([`Grade ${grade}`, `${count} students (${percentage}%)`]);
+                });
+                analyticsData.push(['']);
+
+                // Subject averages
+                analyticsData.push(['Subject Performance', '']);
+                const subjects = ['mathematics', 'science', 'english', 'history', 'arts'];
+                subjects.forEach(subject => {
+                    const scores = filteredStudents.map(s => s.subjects[subject]).filter(score => score > 0);
+                    const avg = scores.length > 0 ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1) : '0.0';
+                    analyticsData.push([subject.charAt(0).toUpperCase() + subject.slice(1), avg + '%']);
+                });
+
+                const csvContent = analyticsData.map(row => row.join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                a.download = `analytics-data-${timestamp}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                showLoadingOverlay(false);
+                showNotification('Analytics data CSV exported successfully!', 'success');
+            }, 1000);
+        }
+
+        function exportExcel() {
+            showLoadingOverlay(true);
+            showNotification('Generating Excel workbook...', 'info');
+
+            setTimeout(() => {
+                const wb = XLSX.utils.book_new();
+
+                // Student Data Sheet
+                const studentData = [
+                    ['Student ID', 'Name', 'GPA', 'Attendance %', 'Assignments %', 'Grade Level', 'Gender', 'Ethnicity', 'Math', 'Science', 'English', 'History', 'Arts']
+                ];
+                filteredStudents.forEach(student => {
+                    studentData.push([
+                        student.id,
+                        student.name,
+                        student.gpa,
+                        student.attendance,
+                        student.assignments,
+                        student.grade_level,
+                        student.gender || '',
+                        student.ethnicity || '',
+                        student.subjects.mathematics || '',
+                        student.subjects.science || '',
+                        student.subjects.english || '',
+                        student.subjects.history || '',
+                        student.subjects.arts || ''
+                    ]);
+                });
+                const studentSheet = XLSX.utils.aoa_to_sheet(studentData);
+                XLSX.utils.book_append_sheet(wb, studentSheet, 'Student Data');
+
+                // Analytics Summary Sheet
+                const analyticsData = [
+                    ['Metric', 'Value'],
+                    ['Total Students', filteredStudents.length],
+                    ['Average GPA', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.gpa, 0) / filteredStudents.length).toFixed(2) : '0.00'],
+                    ['Average Attendance', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.attendance, 0) / filteredStudents.length).toFixed(1) + '%' : '0.0%'],
+                    ['Average Assignment Completion', filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.assignments, 0) / filteredStudents.length).toFixed(1) + '%' : '0.0%'],
+                    [''],
+                    ['Grade Distribution', '']
+                ];
+
+                // Add grade distribution
+                const gradeCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+                filteredStudents.forEach(student => {
+                    if (student.gpa >= 3.7) gradeCounts['A']++;
+                    else if (student.gpa >= 3.0) gradeCounts['B']++;
+                    else if (student.gpa >= 2.3) gradeCounts['C']++;
+                    else if (student.gpa >= 1.7) gradeCounts['D']++;
+                    else gradeCounts['F']++;
+                });
+
+                Object.entries(gradeCounts).forEach(([grade, count]) => {
+                    const percentage = filteredStudents.length > 0 ? ((count / filteredStudents.length) * 100).toFixed(1) : '0.0';
+                    analyticsData.push([`Grade ${grade}`, `${count} students (${percentage}%)`]);
+                });
+
+                const analyticsSheet = XLSX.utils.aoa_to_sheet(analyticsData);
+                XLSX.utils.book_append_sheet(wb, analyticsSheet, 'Analytics Summary');
+
+                // Subject Performance Sheet
+                const subjectData = [['Subject', 'Average Score', 'Students Count']];
+                const subjects = ['mathematics', 'science', 'english', 'history', 'arts'];
+                subjects.forEach(subject => {
+                    const scores = filteredStudents.map(s => s.subjects[subject]).filter(score => score > 0);
+                    const avg = scores.length > 0 ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1) : '0.0';
+                    subjectData.push([
+                        subject.charAt(0).toUpperCase() + subject.slice(1),
+                        avg + '%',
+                        scores.length
+                    ]);
+                });
+                const subjectSheet = XLSX.utils.aoa_to_sheet(subjectData);
+                XLSX.utils.book_append_sheet(wb, subjectSheet, 'Subject Performance');
+
+                // Save the workbook
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                XLSX.writeFile(wb, `educational-data-${timestamp}.xlsx`);
+
+                showLoadingOverlay(false);
+                showNotification('Excel workbook exported successfully!', 'success');
+            }, 1500);
+        }
+
+        function exportJSON() {
+            showLoadingOverlay(true);
+            showNotification('Generating JSON data...', 'info');
+
+            setTimeout(() => {
+                const exportData = {
+                    metadata: {
+                        exportDate: new Date().toISOString(),
+                        totalStudents: filteredStudents.length,
+                        generatedBy: 'EduMetrics Pro'
+                    },
+                    summary: {
+                        averageGPA: filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.gpa, 0) / filteredStudents.length).toFixed(2) : '0.00',
+                        averageAttendance: filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.attendance, 0) / filteredStudents.length).toFixed(1) : '0.0',
+                        averageAssignments: filteredStudents.length > 0 ? (filteredStudents.reduce((sum, s) => sum + s.assignments, 0) / filteredStudents.length).toFixed(1) : '0.0'
+                    },
+                    students: filteredStudents,
+                    analytics: {
+                        gradeDistribution: (() => {
+                            const gradeCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+                            filteredStudents.forEach(student => {
+                                if (student.gpa >= 3.7) gradeCounts['A']++;
+                                else if (student.gpa >= 3.0) gradeCounts['B']++;
+                                else if (student.gpa >= 2.3) gradeCounts['C']++;
+                                else if (student.gpa >= 1.7) gradeCounts['D']++;
+                                else gradeCounts['F']++;
+                            });
+                            return gradeCounts;
+                        })(),
+                        subjectAverages: (() => {
+                            const subjects = ['mathematics', 'science', 'english', 'history', 'arts'];
+                            const averages = {};
+                            subjects.forEach(subject => {
+                                const scores = filteredStudents.map(s => s.subjects[subject]).filter(score => score > 0);
+                                averages[subject] = scores.length > 0 ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1) : '0.0';
+                            });
+                            return averages;
+                        })()
+                    }
+                };
+
+                const jsonContent = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                a.download = `educational-data-${timestamp}.json`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                showLoadingOverlay(false);
+                showNotification('JSON data exported successfully!', 'success');
+            }, 1000);
+        }
+
+        function exportCharts() {
+            showLoadingOverlay(true);
+            showNotification('Exporting charts as images...', 'info');
+
+            setTimeout(async () => {
+                try {
+                    const zip = new JSZip();
+                    const chartIds = ['gradeDistributionChart', 'subjectPerformanceChart', 'attendanceTrendsChart', 'demographicChart'];
+                    const chartNames = ['Grade Distribution', 'Subject Performance', 'Attendance Trends', 'Demographic Comparison'];
+
+                    for (let i = 0; i < chartIds.length; i++) {
+                        const canvas = document.getElementById(chartIds[i]);
+                        if (canvas) {
+                            const dataURL = canvas.toDataURL('image/png');
+                            const base64Data = dataURL.split(',')[1];
+                            zip.file(`${chartNames[i].replace(/\s+/g, '_')}.png`, base64Data, { base64: true });
+                        }
+                    }
+
+                    const content = await zip.generateAsync({ type: 'blob' });
+                    const url = window.URL.createObjectURL(content);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    a.download = `charts-export-${timestamp}.zip`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    showLoadingOverlay(false);
+                    showNotification('Charts exported successfully as ZIP file!', 'success');
+                } catch (error) {
+                    showLoadingOverlay(false);
+                    showNotification('Error exporting charts. Please try again.', 'error');
+                    console.error('Chart export error:', error);
+                }
+            }, 1500);
+        }
+
+        function exportAll() {
+            showLoadingOverlay(true);
+            showNotification('Exporting all data formats...', 'info');
+
+            // Export everything with delays to prevent browser overload
+            exportPDFReport();
+            setTimeout(() => exportAnalyticsPDF(), 3000);
+            setTimeout(() => exportCSVStudents(), 5000);
+            setTimeout(() => exportCSVAnalytics(), 6500);
+            setTimeout(() => exportExcel(), 8000);
+            setTimeout(() => exportJSON(), 10000);
+            setTimeout(() => {
+                exportCharts();
+                showNotification('All exports completed successfully!', 'success');
+                showLoadingOverlay(false);
+            }, 12000);
+        }
+
+        // Footer Link Handlers
+        function handleTwitterLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Twitter...', 'info');
+        }
+
+        function handleLinkedInLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to LinkedIn...', 'info');
+        }
+
+        function handleGitHubLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to GitHub...', 'info');
+        }
+
+        function handleReportsLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Reports...', 'info');
+        }
+
+        function handleDocumentationLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Documentation...', 'info');
+        }
+
+        function handleHelpCenterLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Help Center...', 'info');
+        }
+
+        function handleContactUsLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Contact Us...', 'info');
+        }
+
+        function handlePrivacyPolicyLink(e) {
+            e.preventDefault();
+            showNotification('Navigating to Privacy Policy...', 'info');
+        }
+
+
+    </script>
+
+</body>
+</html>
